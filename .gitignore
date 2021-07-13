@@ -1,0 +1,3 @@
+# dependencies igone
+node_modules
+.env
