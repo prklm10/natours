@@ -23,7 +23,7 @@ mongoose
       'DB Connection successfully established'
     );
   });
-
+console.log(process.env.NODE_ENV);
 // Schema for our collections
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
