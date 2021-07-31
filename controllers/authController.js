@@ -104,17 +104,17 @@ exports.protect = catchAsync(
 
     // console.log(decoded);
     // 3) Check if user still exits
-    const freshUser = await User.findById(
+    const currentUser = await User.findById(
       decoded.id
     );
-    if (!freshUser) {
+    if (!currentUser) {
       return next(
         new AppError(`User does't exit`, 401)
       );
     }
     // 4) check if user Changed password after the token was issued
     if (
-      freshUser.changePasswordAfter(decoded.iat)
+      currentUser.changePasswordAfter(decoded.iat)
     ) {
       return next(
         new AppError(
@@ -123,6 +123,10 @@ exports.protect = catchAsync(
         )
       );
     }
+
+    req.user = currentUser;
+    // if we want to pass information middleware to middleware.  We do it in req body;
+
     next();
   }
 );
