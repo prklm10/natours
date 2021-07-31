@@ -1,6 +1,24 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
+process.on('unhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  console.log(
+    'Unhandled Rejection !! Server shutting down...'
+  );
+
+  process.exit(1); //1 for unhandled rejection
+});
+
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  console.log(
+    'Uncaught Exception!! Server shutting down...'
+  );
+
+  process.exit(1); //1 for unhandled rejection
+});
+
 dotenv.config({ path: './.env' });
 // First read env variable then call app
 
