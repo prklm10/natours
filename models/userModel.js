@@ -60,6 +60,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 // PRE document middleware
@@ -129,6 +134,12 @@ userSchema.methods.createPasswordResetToken =
 
     return resetToken;
   };
+// Query middleware
 
+userSchema.pre(/^find/, function (next) {
+  // This points to cuurent user
+  this.find({ active: { $ne: false } });
+  next();
+});
 const User = mongoose.model('Users', userSchema);
 module.exports = User;

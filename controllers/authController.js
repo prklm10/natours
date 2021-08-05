@@ -11,18 +11,25 @@ const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
+const createAndSendToken = (
+  user,
+  statusCode,
+  res
+) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+};
 
 exports.signUp = catchAsync(
   async (req, res, next) => {
     const newUser = await User.create(req.body);
-    const token = signToken(newUser._id);
-    res.status(201).json({
-      status: 'success',
-      token,
-      data: {
-        user: newUser,
-      },
-    });
+    createAndSendToken(newUser, 201, res);
   }
 );
 
@@ -43,7 +50,7 @@ exports.login = catchAsync(
     const user = await User.findOne({
       email,
     }).select('+password'); // We need + sign to selct those field whose select is false
-    console.log(user);
+    // console.log(user);
 
     if (
       !user ||
@@ -61,11 +68,7 @@ exports.login = catchAsync(
     }
 
     // 3 If everything is okay then sends token to the client
-    const token = signToken(user._id);
-    res.status(200).json({
-      status: 'success',
-      token,
-    });
+    createAndSendToken(user, 200, res);
   }
 );
 
@@ -230,6 +233,35 @@ exports.resetPassword = catchAsync(
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     // 4 Log the user in and send JWT.
+    await user.save();
+    createAndSendToken(user, 200, res);
+  }
+);
+
+// update Password
+
+exports.updatePassword = catchAsync(
+  async (req, res, next) => {
+    const user = await User.findById(
+      req.user.id
+    ).select('+password');
+
+    if (
+      !(await user.correctPassword(
+        req.body.passwordCurrent,
+        user.password
+      ))
+    ) {
+      return next(
+        new AppError(
+          'Your Current Password is wrong.',
+          401
+        )
+      );
+    }
+    user.password = req.body.password;
+    user.passwordConfirm =
+      req.body.passwordConfirm;
     await user.save();
     const token = signToken(user._id);
     res.status(200).json({
